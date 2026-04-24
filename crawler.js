@@ -92,11 +92,11 @@ async function crawl(rootUrl, extraDomain, onProgress) {
     if (visited.has(url)) continue;
     visited.add(url);
 
-    onProgress(`[${pagesScanned + 1}] ${url}`);
+    onProgress({ type: 'log', msg: url });
     const html = await fetchPage(url);
 
     if (!html) {
-      onProgress(`  → skipped`);
+      onProgress({ type: 'skip', url, done: pagesScanned, queued: queue.length });
       continue;
     }
 
@@ -104,17 +104,14 @@ async function crawl(rootUrl, extraDomain, onProgress) {
     const leaks = scanPage($, url, patterns);
     pagesScanned++;
 
-    if (leaks.length > 0) {
-      onProgress(`  → ⚠️  ${leaks.length} leak(s) found`);
-      allLeaks.push(...leaks);
-    }
-
     if (depth < MAX_DEPTH) {
       for (const link of extractLinks($, url, origin)) {
         if (!visited.has(link)) queue.push({ url: link, depth: depth + 1 });
       }
     }
 
+    onProgress({ type: 'page', url, done: pagesScanned, queued: queue.length, leaked: leaks.length });
+    allLeaks.push(...leaks);
     await sleep(DELAY_MS);
   }
 
