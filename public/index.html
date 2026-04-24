@@ -239,12 +239,58 @@
       color: var(--danger-fg);
     }
 
-    /* ── Table ── */
-    .table-wrap {
-      overflow-x: auto;
+    /* ── Leak cards (responsive, no horizontal scroll) ── */
+    .leak-list { display: flex; flex-direction: column; gap: 8px; }
+    .leak-card {
+      background: rgba(6,14,22,0.55);
+      border: 1px solid rgba(53,237,237,0.1);
       border-radius: 10px;
-      border: 1px solid var(--border);
+      padding: 13px 16px;
     }
+    .lc-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 9px;
+      min-width: 0;
+    }
+    .lc-pill {
+      flex-shrink: 0;
+      background: rgba(53,237,237,0.07);
+      border: 1px solid rgba(53,237,237,0.15);
+      border-radius: 20px;
+      padding: 2px 9px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--teal);
+      white-space: nowrap;
+    }
+    .lc-url { flex: 1; min-width: 0; overflow: hidden; }
+    .lc-url code {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lc-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .lc-meta {
+      font-size: 0.77rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Table (report section only) ── */
     table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
     thead th {
       background: var(--surface-2);
@@ -580,13 +626,8 @@
       <div class="results" id="results">
         <hr class="divider">
         <div class="summary" id="summary"></div>
-        <div class="table-wrap" id="tableWrap" style="display:none">
-          <table>
-            <thead>
-              <tr><th>Type</th><th>Staging URL found</th><th>Occurrences</th><th>Fix</th></tr>
-            </thead>
-            <tbody id="leakBody"></tbody>
-          </table>
+        <div id="tableWrap" style="display:none">
+          <div class="leak-list" id="leakBody"></div>
         </div>
         <a href="#" id="reportLink" class="report-link">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
@@ -804,13 +845,18 @@
                          : source === 'template' ? '<span class="src-badge src-tmpl">CMS Template</span>'
                          : '';
             const tipHtml = buildTooltipHtml(g, totalPages);
-            const tr = document.createElement('tr');
-            tr.innerHTML =
-              '<td>' + esc(humanLabel(g.element, g.attribute)) + '</td>' +
-              '<td><code>' + esc(g.value.length > 55 ? g.value.slice(0, 52) + '…' : g.value) + '</code></td>' +
-              '<td>' + g.pageCount + ' page' + (g.pageCount > 1 ? 's' : '') + badge + '</td>' +
-              '<td style="white-space:nowrap"><span class="fix-btn" data-tip="' + esc(tipHtml) + '">How to fix ▾</span></td>';
-            leakBody.appendChild(tr);
+            const card = document.createElement('div');
+            card.className = 'leak-card';
+            card.innerHTML =
+              '<div class="lc-top">' +
+                '<span class="lc-pill">' + esc(humanLabel(g.element, g.attribute)) + '</span>' +
+                '<div class="lc-url"><code>' + esc(g.value) + '</code></div>' +
+              '</div>' +
+              '<div class="lc-bottom">' +
+                '<div class="lc-meta">' + g.pageCount + ' page' + (g.pageCount > 1 ? 's' : '') + badge + '</div>' +
+                '<span class="fix-btn" data-tip="' + esc(tipHtml) + '">How to fix ▾</span>' +
+              '</div>';
+            leakBody.appendChild(card);
           }
         }
       }
