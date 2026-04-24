@@ -267,8 +267,9 @@
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: rgba(53,237,237,0.03); }
     code {
-      background: rgba(53,237,237,0.08);
-      color: var(--teal);
+      background: rgba(8,18,28,0.75);
+      color: #5a9ab5;
+      border: 1px solid rgba(53,237,237,0.1);
       padding: 2px 6px;
       border-radius: 4px;
       font-size: 0.73rem;
@@ -413,24 +414,6 @@
       box-shadow: 0 0 10px rgba(53,237,237,0.45);
     }
 
-    /* ── Fix button ── */
-    .fix-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba(53,237,237,0.08);
-      border: 1px solid rgba(53,237,237,0.22);
-      color: var(--teal);
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 0.69rem;
-      font-weight: 600;
-      cursor: default;
-      white-space: nowrap;
-      letter-spacing: 0.03em;
-      user-select: none;
-    }
-
     /* ── Source badges ── */
     .src-badge {
       display: inline-block;
@@ -447,56 +430,22 @@
     .src-global { background: rgba(53,237,237,0.09); border: 1px solid rgba(53,237,237,0.22); color: var(--teal); }
     .src-tmpl   { background: rgba(255,180,50,0.09); border: 1px solid rgba(255,180,50,0.22); color: #ffb432; }
 
-    /* ── Global tooltip (position:fixed — never clipped) ── */
-    #globalTooltip {
-      position: fixed;
-      display: none;
-      width: 300px;
-      background: #0c1622;
-      border: 1px solid rgba(53,237,237,0.3);
-      border-radius: 14px;
-      padding: 0;
-      font-size: 0.79rem;
-      color: #c0d0e8;
-      line-height: 1.6;
-      z-index: 9999;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(53,237,237,0.06);
-      pointer-events: none;
-      overflow: hidden;
-    }
-    #globalTooltip .tt-head {
-      background: rgba(53,237,237,0.08);
-      border-bottom: 1px solid rgba(53,237,237,0.15);
-      padding: 9px 14px;
-      font-size: 0.7rem;
+    /* ── Inline fix guidance ── */
+    .fix-inline { min-width: 210px; }
+    .fix-where {
+      font-size: 0.67rem;
       font-weight: 700;
-      letter-spacing: 0.07em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
       color: var(--teal);
+      margin-bottom: 6px;
     }
-    #globalTooltip .tt-body { padding: 13px 14px 14px; }
-    #globalTooltip .tt-source {
-      display: inline-block;
-      margin-bottom: 9px;
-      background: rgba(53,237,237,0.09);
-      border: 1px solid rgba(53,237,237,0.2);
-      border-radius: 20px;
-      padding: 2px 10px;
-      font-size: 0.68rem;
-      font-weight: 600;
-      color: var(--teal);
+    .fix-steps {
+      font-size: 0.73rem;
+      color: #6a8898;
+      line-height: 1.6;
     }
-    #globalTooltip p { margin-bottom: 8px; font-size: 0.78rem; }
-    #globalTooltip strong { color: #fff; }
-    #globalTooltip em { color: #5a7090; font-style: normal; }
-    #globalTooltip .tt-steps {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid rgba(255,255,255,0.07);
-    }
-    #globalTooltip ol,
-    #globalTooltip ul { padding-left: 17px; margin: 5px 0 8px; }
-    #globalTooltip li { margin-bottom: 3px; font-size: 0.76rem; }
+    .fix-steps strong { color: #b0c8d8; font-weight: 600; }
 
     /* ── Footer ── */
     .footer {
@@ -582,7 +531,7 @@
         <div class="table-wrap" id="tableWrap" style="display:none">
           <table>
             <thead>
-              <tr><th>Type</th><th>Staging URL found</th><th>Occurrences</th><th>Fix</th></tr>
+              <tr><th>Type</th><th>Staging URL found</th><th>Occurrences</th><th>Where to fix in Webflow</th></tr>
             </thead>
             <tbody id="leakBody"></tbody>
           </table>
@@ -625,8 +574,6 @@
 
   </div>
 
-  <div id="globalTooltip"></div>
-
   <script>
     const form          = document.getElementById('scanForm');
     const runBtn        = document.getElementById('runBtn');
@@ -637,7 +584,6 @@
     const leakBody      = document.getElementById('leakBody');
     const errorBox      = document.getElementById('errorBox');
     const siteInput     = document.getElementById('siteUrl');
-    const ttEl          = document.getElementById('globalTooltip');
     const progressWrap  = document.getElementById('progressWrap');
     const progressFill  = document.getElementById('progressFill');
     const progressPct   = document.getElementById('progressPct');
@@ -654,7 +600,6 @@
       progressWrap.style.display = 'none';
       progressFill.style.width = '0%';
       document.getElementById('reportSection').style.display = 'none';
-      ttEl.style.display = 'none';
     });
 
     function normalizeUrl(raw) {
@@ -663,33 +608,6 @@
       if (/^https?:\/\//i.test(url)) return url;
       if (url.startsWith('//')) url = url.slice(2);
       return 'https://' + url;
-    }
-
-    // ── Global tooltip via position:fixed (never clipped by overflow) ──
-    document.addEventListener('mouseover', e => {
-      const btn = e.target.closest('.fix-btn');
-      if (!btn) return;
-      const html = btn.dataset.tip;
-      if (!html) return;
-      ttEl.innerHTML = html;
-      ttEl.style.display = 'block';
-      positionTooltip(btn);
-    });
-    document.addEventListener('mouseout', e => {
-      if (e.target.closest && e.target.closest('.fix-btn') && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.fix-btn'))) {
-        ttEl.style.display = 'none';
-      }
-    });
-    function positionTooltip(btn) {
-      const r = btn.getBoundingClientRect();
-      const w = 300;
-      let left = r.right - w;
-      if (left < 8) left = 8;
-      if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
-      const spaceBelow = window.innerHeight - r.bottom - 8;
-      let top = spaceBelow >= 260 ? r.bottom + 8 : Math.max(8, r.top - ttEl.offsetHeight - 8);
-      ttEl.style.left = left + 'px';
-      ttEl.style.top  = top  + 'px';
     }
 
     // ── Group leaks by value+element+attribute ──
@@ -722,30 +640,20 @@
       return 'single';
     }
 
-    function buildTooltipHtml(group, totalPages) {
-      const label  = humanLabel(group.element, group.attribute);
-      const pc     = group.pageCount;
-      const source = detectSource(pc, totalPages);
-
-      let sourceBadge, intro, steps;
-
+    function buildInlineFix(group, totalPages) {
+      const source = detectSource(group.pageCount, totalPages);
+      let where, steps;
       if (source === 'global') {
-        sourceBadge = '📍 Global component — Navbar or Footer';
-        intro = 'This <strong>' + label.toLowerCase() + '</strong> appears on <strong>' + pc + ' of ' + totalPages + ' pages</strong> — it\'s coming from a <strong>global component</strong> that repeats on every page.';
-        steps = '<div class="tt-steps"><strong>In Webflow, check:</strong><ol><li>Navbar <em>(most common)</em></li><li>Footer</li><li>CMS Template pages</li><li>Reusable Symbols</li></ol><strong>Steps to fix:</strong><ul><li>Open Webflow Designer</li><li>Click the Navbar or Footer element</li><li>Find the link or button with the staging URL</li><li>Open Link Settings → replace with the live URL</li><li>Publish the site</li></ul></div>';
+        where = '📍 Navbar or Footer';
+        steps = 'Open <strong>Webflow Designer</strong> → select <strong>Navbar</strong> or <strong>Footer</strong> → find the link → open Link Settings → replace with live URL → Publish';
       } else if (source === 'template') {
-        sourceBadge = '📍 CMS Template (likely)';
-        intro = 'This appears on <strong>' + pc + ' pages</strong> — it\'s likely inside a <strong>CMS Collection Template</strong> that\'s reused across multiple pages.';
-        steps = '<div class="tt-steps"><strong>In Webflow, check:</strong><ol><li>CMS Collection Templates</li><li>Dynamic list components</li><li>Reusable Symbols</li></ol><strong>Steps to fix:</strong><ul><li>Open Webflow Designer</li><li>Navigate to the Collection Template page</li><li>Find the element with the staging URL</li><li>Update Link Settings to use the live URL</li></ul></div>';
+        where = '📍 CMS Template';
+        steps = 'Open <strong>Webflow Designer</strong> → go to <strong>Collection Template</strong> → find the element → update URL in Link Settings → Publish';
       } else {
-        sourceBadge = pc > 1 ? '📍 ' + pc + ' pages' : '📍 Single page';
-        intro = 'This <strong>' + label.toLowerCase() + '</strong> appears on <strong>' + (pc === 1 ? 'one page' : pc + ' pages') + '</strong>.';
-        steps = '<div class="tt-steps"><strong>In Webflow, fix it:</strong><ul><li>Open the page in Webflow Designer</li><li>Find the element referencing the staging URL</li><li>Open Link Settings → replace with the live URL</li><li>Publish the site</li></ul></div>';
+        where = '📍 Single page';
+        steps = 'Open <strong>Webflow Designer</strong> → open the page → find the element → update URL in Link Settings → Publish';
       }
-
-      return '<div class="tt-head">' + esc(label) + '</div>'
-           + '<div class="tt-body"><div class="tt-source">' + esc(sourceBadge) + '</div>'
-           + '<p>' + intro + '</p>' + steps + '</div>';
+      return '<div class="fix-inline"><div class="fix-where">' + esc(where) + '</div><div class="fix-steps">' + steps + '</div></div>';
     }
 
     form.addEventListener('submit', async (e) => {
@@ -769,7 +677,6 @@
       errorBox.style.display = 'none';
       tableWrap.style.display = 'none';
       leakBody.innerHTML = '';
-      ttEl.style.display = 'none';
 
       let maxTotal = 1;
 
@@ -802,13 +709,12 @@
             const badge  = source === 'global'   ? '<span class="src-badge src-global">Global component</span>'
                          : source === 'template' ? '<span class="src-badge src-tmpl">CMS Template</span>'
                          : '';
-            const tipHtml = buildTooltipHtml(g, totalPages);
             const tr = document.createElement('tr');
             tr.innerHTML =
               '<td>' + esc(humanLabel(g.element, g.attribute)) + '</td>' +
-              '<td><code>' + esc(g.value.length > 55 ? g.value.slice(0, 52) + '…' : g.value) + '</code></td>' +
+              '<td><code>' + esc(g.value.length > 60 ? g.value.slice(0, 57) + '…' : g.value) + '</code></td>' +
               '<td>' + g.pageCount + ' page' + (g.pageCount > 1 ? 's' : '') + badge + '</td>' +
-              '<td style="white-space:nowrap"><span class="fix-btn" data-tip="' + esc(tipHtml) + '">How to fix ▾</span></td>';
+              '<td>' + buildInlineFix(g, totalPages) + '</td>';
             leakBody.appendChild(tr);
           }
         }
