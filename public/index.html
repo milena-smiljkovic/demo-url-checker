@@ -261,7 +261,7 @@
       padding: 10px 14px;
       border-bottom: 1px solid #0d1520;
       vertical-align: top;
-      word-break: break-all;
+      overflow-wrap: break-word;
       color: #c0d0e8;
     }
     tr:last-child td { border-bottom: none; }
@@ -406,6 +406,7 @@
       text-transform: uppercase;
       vertical-align: middle;
       margin-left: 5px;
+      white-space: nowrap;
     }
     .src-global { background: rgba(53,237,237,0.09); border: 1px solid rgba(53,237,237,0.22); color: var(--teal); }
     .src-tmpl   { background: rgba(255,180,50,0.09); border: 1px solid rgba(255,180,50,0.22); color: #ffb432; }
