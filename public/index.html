@@ -377,6 +377,45 @@
       font-family: 'Courier New', monospace;
     }
 
+    /* ── Tooltip (fix hints) ── */
+    .fix-wrap {
+      position: relative;
+      display: inline-block;
+    }
+    .fix-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(53,237,237,0.08);
+      border: 1px solid rgba(53,237,237,0.18);
+      color: var(--teal);
+      border-radius: 6px;
+      padding: 3px 9px;
+      font-size: 0.69rem;
+      font-weight: 600;
+      cursor: default;
+      white-space: nowrap;
+      letter-spacing: 0.03em;
+    }
+    .fix-tooltip {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 6px);
+      width: 240px;
+      background: #0e1825;
+      border: 1px solid rgba(53,237,237,0.22);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.77rem;
+      color: #c0d0e8;
+      line-height: 1.55;
+      z-index: 100;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.65);
+      pointer-events: none;
+    }
+    .fix-wrap:hover .fix-tooltip { display: block; }
+
     /* ── Footer ── */
     .footer {
       margin-top: 44px;
@@ -437,11 +476,7 @@
       <form id="scanForm">
         <div class="field">
           <label for="siteUrl">Client live URL <span style="color:var(--teal)">*</span></label>
-          <input type="url" id="siteUrl" placeholder="https://clientsite.com" required>
-        </div>
-        <div class="field">
-          <label for="stagingUrl">Demo domain <em>(used before launch)</em></label>
-          <input type="text" id="stagingUrl" placeholder="e.g. msplaunchpaddemo5.com">
+          <input type="text" id="siteUrl" placeholder="clientsite.com or www.clientsite.com" autocomplete="off" spellcheck="false">
         </div>
         <button type="submit" class="btn" id="runBtn">Run scan</button>
       </form>
@@ -455,7 +490,7 @@
         <div class="table-wrap" id="tableWrap" style="display:none">
           <table>
             <thead>
-              <tr><th>Page</th><th>Element</th><th>Attribute</th><th>Value</th></tr>
+              <tr><th>Page</th><th>Element</th><th>Attribute</th><th>Value</th><th>Fix</th></tr>
             </thead>
             <tbody id="leakBody"></tbody>
           </table>
@@ -507,11 +542,36 @@
     const tableWrap = document.getElementById('tableWrap');
     const leakBody  = document.getElementById('leakBody');
     const errorBox  = document.getElementById('errorBox');
+    const siteInput = document.getElementById('siteUrl');
+
+    // Auto-clear old results when user types a new URL
+    siteInput.addEventListener('input', () => {
+      results.style.display = 'none';
+      tableWrap.style.display = 'none';
+      leakBody.innerHTML = '';
+      errorBox.style.display = 'none';
+      logBox.style.display = 'none';
+      logBox.textContent = '';
+      document.getElementById('reportSection').style.display = 'none';
+    });
+
+    function normalizeUrl(raw) {
+      let url = raw.trim();
+      if (!url) return '';
+      if (/^https?:\/\//i.test(url)) return url;
+      if (url.startsWith('//')) url = url.slice(2);
+      return 'https://' + url;
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const siteUrl    = document.getElementById('siteUrl').value.trim();
-      const stagingUrl = document.getElementById('stagingUrl').value.trim();
+      const siteUrl = normalizeUrl(siteInput.value);
+
+      if (!siteUrl) {
+        errorBox.textContent = '❌ Please enter a URL.';
+        errorBox.style.display = 'block';
+        return;
+      }
 
       runBtn.disabled = true;
       runBtn.textContent = 'Scanning…';
@@ -526,7 +586,7 @@
         const res  = await fetch('/scan', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ siteUrl, stagingUrl: stagingUrl || null }),
+          body: JSON.stringify({ siteUrl }),
         });
         const data = await res.json();
 
@@ -553,10 +613,11 @@
           for (const l of data.leaks) {
             const tr = document.createElement('tr');
             tr.innerHTML =
-              '<td style="color:#5a7090;font-size:0.71rem">' + l.page + '</td>' +
-              '<td><code>' + l.element + '</code></td>' +
-              '<td><code>' + l.attribute + '</code></td>' +
-              '<td><code>' + esc(l.value) + '</code></td>';
+              '<td style="color:#5a7090;font-size:0.71rem">' + esc(l.page) + '</td>' +
+              '<td><code>' + esc(l.element) + '</code></td>' +
+              '<td><code>' + esc(l.attribute) + '</code></td>' +
+              '<td><code>' + esc(l.value) + '</code></td>' +
+              '<td style="white-space:nowrap">' + fixHint(l.element, l.attribute) + '</td>';
             leakBody.appendChild(tr);
           }
         }
@@ -569,8 +630,23 @@
       }
     });
 
+    function fixHint(element, attribute) {
+      const el  = (element   || '').toLowerCase();
+      const att = (attribute || '').toLowerCase();
+      let msg;
+      if      (att === 'href'   && el === 'a')      msg = 'Search your theme files or page builder for this link and update it to the live domain.';
+      else if (att === 'src'    && el === 'img')     msg = 'Re-upload or relink this image from the live media library, or update its src URL in the template.';
+      else if (att === 'src'    && el === 'script')  msg = "This script loads from staging. Update the src in your theme's header/footer PHP or plugin settings.";
+      else if (att === 'href'   && el === 'link')    msg = "A stylesheet is loading from staging. Check your theme's enqueued styles or CDN configuration.";
+      else if (att === 'srcset')                     msg = "Update the srcset attribute in your theme's image templates or page builder responsive image settings.";
+      else if (att === 'action')                     msg = 'Form action points to staging. Update it in your form plugin settings or page builder HTML block.';
+      else if (att.startsWith('data-'))              msg = 'A data attribute holds a staging URL. Search your theme templates or plugin config for this attribute name.';
+      else                                           msg = 'Search your theme files, plugin settings, and database for this staging URL and replace it with the live domain.';
+      return '<div class="fix-wrap"><span class="fix-btn">How to fix ▾</span><div class="fix-tooltip">' + esc(msg) + '</div></div>';
+    }
+
     function esc(s) {
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     // ── Inline report ──
@@ -596,20 +672,14 @@
       let html = '';
       let inTable = false;
       let pastSeparator = false;
-
       for (const line of lines) {
         if (line.startsWith('# ')) {
           html += '<h2>' + esc(line.slice(2)) + '</h2>';
         } else if (/^\|[-\s|]+\|$/.test(line)) {
-          // table separator — switch thead→tbody
           html += '</thead><tbody>';
           pastSeparator = true;
         } else if (line.startsWith('|')) {
-          if (!inTable) {
-            html += '<table><thead>';
-            inTable = true;
-            pastSeparator = false;
-          }
+          if (!inTable) { html += '<table><thead>'; inTable = true; pastSeparator = false; }
           const cells = line.split('|').slice(1, -1).map(c => c.trim());
           const tag = pastSeparator ? 'td' : 'th';
           html += '<tr>' + cells.map(c => '<' + tag + '>' + inlineFormat(c) + '</' + tag + '>').join('') + '</tr>';
