@@ -7,7 +7,7 @@ const { crawl } = require('./crawler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const REPORT_PATH = path.join(__dirname, 'staging-leak-report.md');
+const REPORT_PATH = process.env.VERCEL ? '/tmp/staging-leak-report.md' : path.join(__dirname, 'staging-leak-report.md');
 
 app.use(express.json());
 app.use(express.static('public'));
