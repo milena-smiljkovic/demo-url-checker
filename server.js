@@ -93,4 +93,8 @@ app.get('/report', (req, res) => {
   res.send(fs.readFileSync(REPORT_PATH, 'utf8'));
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`Staging checker → port ${PORT}`));
+if (!process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => console.log(`Staging checker → port ${PORT}`));
+}
+
+module.exports = app;
