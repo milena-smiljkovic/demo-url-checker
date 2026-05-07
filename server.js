@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 const REPORT_PATH = process.env.VERCEL ? '/tmp/staging-leak-report.md' : path.join(__dirname, 'staging-leak-report.md');
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 function buildReport(siteUrl, pagesScanned, leaks) {
   const lines = [
