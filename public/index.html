@@ -545,6 +545,216 @@
     #globalTooltip ul { padding-left: 17px; margin: 5px 0 8px; }
     #globalTooltip li { margin-bottom: 3px; font-size: 0.76rem; }
 
+    /* ── History button ── */
+    .hist-btn {
+      position: fixed;
+      top: 18px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 15px;
+      background: var(--surface);
+      border: 1px solid rgba(53,237,237,0.2);
+      border-radius: 10px;
+      color: var(--teal);
+      font-size: 0.78rem;
+      font-weight: 700;
+      font-family: inherit;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+    .hist-btn:hover {
+      background: rgba(53,237,237,0.07);
+      border-color: rgba(53,237,237,0.4);
+      box-shadow: 0 0 16px rgba(53,237,237,0.15);
+    }
+
+    /* ── History overlay ── */
+    .hist-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 1001;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .hist-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ── History drawer ── */
+    .hist-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100vh;
+      width: 400px;
+      max-width: 92vw;
+      background: #0c1018;
+      border-left: 1px solid rgba(53,237,237,0.15);
+      z-index: 1002;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
+      box-shadow: -20px 0 60px rgba(0,0,0,0.65);
+    }
+    .hist-drawer.open { transform: translateX(0); }
+    .hist-drawer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 22px 18px;
+      border-bottom: 1px solid rgba(53,237,237,0.1);
+      flex-shrink: 0;
+    }
+    .hist-drawer-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--teal);
+    }
+    .hist-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.35rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: inherit;
+      transition: color 0.15s, background 0.15s;
+    }
+    .hist-close:hover { color: var(--white); background: rgba(255,255,255,0.06); }
+    .hist-list {
+      overflow-y: auto;
+      flex: 1;
+      padding: 8px 0;
+    }
+    .hist-list::-webkit-scrollbar { width: 4px; }
+    .hist-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .hist-empty {
+      padding: 48px 22px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.75;
+    }
+
+    /* ── History entries ── */
+    .he { border-bottom: 1px solid rgba(53,237,237,0.06); }
+    .he:last-child { border-bottom: none; }
+    .he-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      padding: 13px 22px;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .he-row:hover { background: rgba(53,237,237,0.03); }
+    .he-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .he-dot.clean { background: var(--teal); box-shadow: 0 0 6px rgba(53,237,237,0.5); }
+    .he-dot.leaks { background: #ff6060; box-shadow: 0 0 6px rgba(255,96,96,0.45); }
+    .he-main { flex: 1; min-width: 0; }
+    .he-url {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .he-meta {
+      font-size: 0.71rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .he-badge {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 20px;
+      font-size: 0.63rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .he-badge.clean {
+      background: rgba(53,237,237,0.08);
+      border: 1px solid rgba(53,237,237,0.2);
+      color: var(--teal);
+    }
+    .he-badge.leaks {
+      background: rgba(255,96,96,0.08);
+      border: 1px solid rgba(255,96,96,0.2);
+      color: #ff6060;
+    }
+    .he-chevron {
+      color: var(--muted);
+      font-size: 0.72rem;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .he.expanded .he-chevron { transform: rotate(90deg); }
+    .he-detail {
+      display: none;
+      padding: 0 22px 14px 41px;
+    }
+    .he.expanded .he-detail { display: block; }
+    .he-page-group { margin-bottom: 10px; }
+    .he-page-url {
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-family: 'Courier New', monospace;
+      margin-bottom: 5px;
+      word-break: break-all;
+    }
+    .he-leak-item {
+      background: rgba(6,14,22,0.7);
+      border: 1px solid rgba(53,237,237,0.08);
+      border-radius: 7px;
+      padding: 8px 11px;
+      margin-bottom: 5px;
+    }
+    .he-leak-label {
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .he-leak-value {
+      font-size: 0.72rem;
+      color: var(--teal);
+      font-family: 'Courier New', monospace;
+      word-break: break-all;
+      margin-bottom: 5px;
+    }
+    .he-fix-tip {
+      font-size: 0.7rem;
+      color: #8899bb;
+      line-height: 1.55;
+      padding-top: 5px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      margin-top: 2px;
+    }
+
     /* ── Footer ── */
     .footer {
       margin-top: 44px;
@@ -668,6 +878,24 @@
   </div>
 
   <div id="globalTooltip"></div>
+
+  <!-- History button -->
+  <button class="hist-btn" id="histBtn" onclick="openHistory()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+    History
+  </button>
+
+  <!-- History overlay -->
+  <div class="hist-overlay" id="histOverlay" onclick="closeHistory()"></div>
+
+  <!-- History drawer -->
+  <div class="hist-drawer" id="histDrawer">
+    <div class="hist-drawer-head">
+      <span class="hist-drawer-title">Scan History</span>
+      <button class="hist-close" onclick="closeHistory()">&#x2715;</button>
+    </div>
+    <div class="hist-list" id="histList"></div>
+  </div>
 
   <script>
     const form          = document.getElementById('scanForm');
@@ -877,6 +1105,7 @@
           progressPct.textContent = '100%';
           progressLabel.textContent = data.pagesScanned + ' page' + (data.pagesScanned !== 1 ? 's' : '') + ' scanned — done';
           renderResults(data);
+          saveToHistory(siteUrl, data.pagesScanned, data.leaks || []);
         } else if (data.type === 'error') {
           errorBox.textContent = '❌ ' + (data.error || 'Scan failed.');
           errorBox.style.display = 'block';
@@ -966,6 +1195,105 @@
 
     function inlineFormat(s) {
       return esc(s).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/`(.*?)`/g, '<code>$1</code>');
+    }
+
+    // ── Scan history (localStorage) ──
+    const HIST_KEY = 'demoUrlCheckerHistory';
+    const HIST_MAX = 50;
+
+    function saveToHistory(url, pagesScanned, leaks) {
+      let history = loadHistory();
+      history.unshift({ id: Date.now(), url, scannedAt: new Date().toISOString(), pagesScanned, leaks });
+      if (history.length > HIST_MAX) history = history.slice(0, HIST_MAX);
+      try { localStorage.setItem(HIST_KEY, JSON.stringify(history)); } catch {}
+    }
+
+    function loadHistory() {
+      try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; }
+    }
+
+    function openHistory() {
+      const entries = loadHistory();
+      const list = document.getElementById('histList');
+      if (!entries.length) {
+        list.innerHTML = '<div class="hist-empty">No scans yet.<br>Run your first scan and it will appear here.</div>';
+      } else {
+        list.innerHTML = entries.map((e, i) => buildHistEntryHtml(e, i)).join('');
+      }
+      document.getElementById('histDrawer').classList.add('open');
+      document.getElementById('histOverlay').classList.add('open');
+    }
+
+    function closeHistory() {
+      document.getElementById('histDrawer').classList.remove('open');
+      document.getElementById('histOverlay').classList.remove('open');
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeHistory();
+    });
+
+    function buildHistEntryHtml(entry, idx) {
+      const hasLeaks = entry.leaks && entry.leaks.length > 0;
+      const dot      = hasLeaks ? 'leaks' : 'clean';
+      const badge    = hasLeaks
+        ? '<span class="he-badge leaks">' + entry.leaks.length + ' leak' + (entry.leaks.length > 1 ? 's' : '') + '</span>'
+        : '<span class="he-badge clean">Clean</span>';
+      const chevron  = hasLeaks ? '<span class="he-chevron">&#9658;</span>' : '';
+      const detail   = hasLeaks ? buildHistDetailHtml(entry) : '';
+
+      return '<div class="he" id="he-' + idx + '">'
+        + '<div class="he-row" ' + (hasLeaks ? 'onclick="toggleHistEntry(' + idx + ')"' : '') + '>'
+          + '<div class="he-dot ' + dot + '"></div>'
+          + '<div class="he-main">'
+            + '<div class="he-url">' + esc(entry.url) + '</div>'
+            + '<div class="he-meta">' + badge + '<span>' + formatHistDate(entry.scannedAt) + '</span><span>' + entry.pagesScanned + ' page' + (entry.pagesScanned !== 1 ? 's' : '') + ' scanned</span></div>'
+          + '</div>'
+          + chevron
+        + '</div>'
+        + (detail ? '<div class="he-detail">' + detail + '</div>' : '')
+      + '</div>';
+    }
+
+    function buildHistDetailHtml(entry) {
+      const leaks      = entry.leaks;
+      const totalPages = entry.pagesScanned;
+      const byPage     = new Map();
+      for (const l of leaks) {
+        if (!byPage.has(l.page)) byPage.set(l.page, []);
+        byPage.get(l.page).push(l);
+      }
+      let html = '';
+      for (const [page, pageLeaks] of byPage) {
+        html += '<div class="he-page-group"><div class="he-page-url">&#128196; ' + esc(page) + '</div>';
+        for (const l of pageLeaks) {
+          const label  = humanLabel(l.element, l.attribute);
+          const source = detectSource(leaks.filter(x => x.page === page).length, totalPages);
+          html += '<div class="he-leak-item">'
+            + '<div class="he-leak-label">' + esc(label) + '</div>'
+            + '<div class="he-leak-value">' + esc(l.value) + '</div>'
+            + '<div class="he-fix-tip">' + getInlineFixTip(source) + '</div>'
+          + '</div>';
+        }
+        html += '</div>';
+      }
+      return html;
+    }
+
+    function getInlineFixTip(source) {
+      if (source === 'global')   return '&#128204; Global component (Navbar/Footer) — open Webflow Designer, find the link in the Navbar or Footer, update to the live URL, and republish.';
+      if (source === 'template') return '&#128204; CMS Template — open the Collection Template in Webflow Designer, update the link, and republish.';
+      return '&#128204; Open the page in Webflow Designer, find the element with this URL, update it to the live URL, and republish.';
+    }
+
+    function toggleHistEntry(idx) {
+      document.getElementById('he-' + idx).classList.toggle('expanded');
+    }
+
+    function formatHistDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+           + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     }
   </script>
 </body>
